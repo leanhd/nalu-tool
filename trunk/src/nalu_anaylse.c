@@ -8,7 +8,9 @@
 //////////////////////////////////////////////////////////////////////////
 int  DumpOneNalu(Nalu *p_nalu)
 {
-	printf("This is No.%d NALU.\n",NALU_index);
-	printf("NALU type: %d ,  NALU length: %d .\n",p_nalu->type,p_nalu->length);
+	printf("%4d: ",         p_nalu->index);
+	printf("type = %2d, ",  p_nalu->type);
+	printf("length= %d.",   p_nalu->length);
+	printf("\n");
 	return 0;
 }

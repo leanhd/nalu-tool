@@ -4,8 +4,7 @@
 
 #include "nalu_tool.h"
 
-int  g_i_num;  // how many nalus will be cut out
-int DUMPNALU=0;
+Param param, *p_param = &param;
 
 __inline void PrintHelp()
 {
@@ -33,6 +32,8 @@ int InitNalu(Nalu **nalu)
 		printf("Mem allocation error in %s, %s\n", __FILE__, __LINE__);
 		exit(1);
 	}
+
+	(*nalu)->index = 0;
 
 	return 1;
 }
@@ -70,12 +71,11 @@ int main (int argc, char **argv)
 	if (0 == ParseParam(&pf_in,&pf_out,argc, argv))
 		exit(1);
 
-	while (g_i_num-- && !feof(pf_in))
+	while (p_param->nalu_num-- && !feof(pf_in))
 	{
 		GetOneNalu(pf_in,  p_nalu);
-	    NALU_index++;
 
-		if(DUMPNALU==1)
+		if(p_param->dump_flag == 1)
 			DumpOneNalu(p_nalu);
 
 		PutOneNalu(pf_out, p_nalu);
@@ -102,9 +102,9 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 	int err;
 	char *in_filename  = DEFAULT_IN_FILENAME;
 	char *out_filename = DEFAULT_IN_FILENAME;
-	g_i_num            = DEFAULT_NALU_NUM;
+	p_param->nalu_num  = DEFAULT_NALU_NUM;
+	p_param->dump_flag = DEFAULT_DUMP_FLAG;
 	
-
 	// parse command line parameters
 	// printf("Parsing Command Line Parameters...\n");
 	if (argc < 3 || argc > 8)
@@ -132,13 +132,13 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 
 		if(0 == strncmp (argv[i], "-n", 2))
 		{
-			g_i_num = atoi(argv[i+1]);
+			p_param->nalu_num = atoi(argv[i+1]);
 			i++;
 		}
 
 		if(0 == strncmp (argv[i], "-v", 2))
 		{
-			DUMPNALU=1;
+			p_param->dump_flag = 1;
 		}
 	}
 

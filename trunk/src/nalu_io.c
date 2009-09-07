@@ -31,6 +31,8 @@ int GetOneNalu(FILE* pf_in, Nalu * p_nalu)
 	int i_info2 = 0;
 	int i_info3 = 0;
 
+	p_nalu->index++;
+
 	while( !feof(pf_in) && (p_nalu->buffer[i_pos++]=fgetc(pf_in)) ==0)
 		;
 
