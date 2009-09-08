@@ -45,15 +45,6 @@ int GetOneNalu(FILE* pf_in, Nalu * p_nalu)
 		}
 		p_nalu->buffer[i_pos++] = fgetc (pf_in);
 
-		//initial the struct NALU
-		if(p_nalu->buffer[i_pos-5]==0&&p_nalu->buffer[i_pos-4]==0
-			&&p_nalu->buffer[i_pos-3]==0&&p_nalu->buffer[i_pos-2]==1)
-		{
-			p_nalu->type=(p_nalu->buffer[i_pos-1])&31;//00011111
-			p_nalu->forbidden_zero_bit=(p_nalu->buffer[i_pos-1])&128;
-			p_nalu->nal_ref_idc=(p_nalu->buffer[i_pos-1])&96;//01100000
-		}
-
 		i_info3 = FindStartCode(&p_nalu->buffer[i_pos-4], 3);
 		if(i_info3 != 1)
 			i_info2 = FindStartCode(&p_nalu->buffer[i_pos-3], 2);

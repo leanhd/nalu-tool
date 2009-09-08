@@ -75,8 +75,7 @@ int main (int argc, char **argv)
 	{
 		GetOneNalu(pf_in,  p_nalu);
 
-		if(p_param->dump_flag == 1)
-			DumpOneNalu(p_nalu);
+		ParseNaluHeader(p_nalu);
 
 		PutOneNalu(pf_out, p_nalu);
 	}
