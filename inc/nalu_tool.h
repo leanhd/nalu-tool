@@ -52,5 +52,6 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv);
 int  GetOneNalu(FILE* pf_in, Nalu *p_nalu);
 int  PutOneNalu(FILE* pf_out, Nalu *p_nalu);
 int  DumpOneNalu(Nalu *p_nalu);
+int  ParseNaluHeader(Nalu *p_nalu);
 
 #endif // __NALU_TOOL_H__
