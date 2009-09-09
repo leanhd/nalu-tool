@@ -65,7 +65,7 @@ int main (int argc, char **argv)
 	FILE *pf_in      = NULL;
 	FILE *pf_out     = NULL;
 	Nalu *p_nalu     = NULL;
-
+	
 	InitNalu(&p_nalu);
 
 	if (0 == ParseParam(&pf_in,&pf_out,argc, argv))
