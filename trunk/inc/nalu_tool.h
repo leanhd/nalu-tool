@@ -27,7 +27,10 @@ typedef enum
 	END_OF_STREAM   = 11,
 	FILLER_DATA     = 12,
 	SPS_EXTENTION   = 13,
-	NON_PART_SLICE  = 19
+	PREFIX_NALU     = 14,
+	SUBSET_SPS      = 15,
+	NON_PART_SLICE  = 19,
+	SLICE_LAYER_EXT = 20
 } NaluType;
 
 typedef struct global_parameter 
@@ -48,10 +51,27 @@ typedef struct nal_unit
 	byte    *buffer;
 } Nalu;
 
+typedef struct nal_unit_svc
+{
+	Nalu    **pnalu;
+	int     reserved_one_bit;
+	int     idr_flag;
+	int     priority_id;
+	int     no_inter_layer_pred_flag;
+	int     dependency_id;
+	int     quality_id;
+	int     temporal_id;
+	int     use_ref_base_pic_flag;
+	int     discardable_flag;
+	int     output_flag;
+	int     reserved_three_2bits;
+} Snalu;
+
 int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv);
 int  GetOneNalu(FILE* pf_in, Nalu *p_nalu);
 int  PutOneNalu(FILE* pf_out, Nalu *p_nalu);
 int  DumpOneNalu(Nalu *p_nalu);
+int  DumpOneSnalu(Snalu *p_snalu);
 int  ParseNaluHeader(Nalu *p_nalu);
 
 #endif // __NALU_TOOL_H__
