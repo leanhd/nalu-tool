@@ -121,7 +121,7 @@ int main (int argc, char **argv)
 
 	while (p_param->nalu_num-- && !feof(pf_in))
 	{
-		GetOneNalu(pf_in,  p_nalu);
+		p_nalu->length = GetOneNalu(pf_in,  p_nalu);
 
 		ParseNaluHeader(p_nalu, pf_dump);
 
@@ -166,7 +166,7 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 	{
 		if(0 == strncmp (argv[i], "-i", 2))
 		{
-			if((*f_in = fopen(argv[i+1], "rb")) != 0)
+			if((*f_in = fopen(argv[i+1], "rb")) == NULL)
 			{
 				printf( "Error: file %s not found\n",argv[i+1]);
 			}
@@ -192,7 +192,7 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 		}
 	}
 
-	if((*f_out = fopen(p_param->out_filename, "wb"))!=0)
+	if((*f_out = fopen(p_param->out_filename, "wb")) == NULL)
 		printf( "Error: file can not open\n");
 
 	if(i=argc)
