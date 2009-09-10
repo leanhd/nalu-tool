@@ -6,12 +6,43 @@
 
 Param param, *p_param = &param;
 
-__inline void PrintHelp()
+__inline void PrintHelp(void)
 {
 	printf("nalu_tool.exe -i in_file [options] -o [out_file]\n");
 	printf("options: \n");
 	printf("\t-n N : fetch N NALUs from in_file to out_file\n");
-	printf("\t if need NALU details,usage:add -v \n");
+	printf("\t-v   : dump NALU details\n");
+}
+
+void InitDump(FILE** f_dump)
+{
+	printf("----------------------------- NALU Tool %s ----------------------------\n", VERSION);
+	printf("Input file                       : %s \n", p_param->in_filename);
+	printf("Output file                      : %s \n", p_param->out_filename);
+	printf("NALU numbers                     : %d \n", p_param->nalu_num);
+	printf("Dump NALU headers                : %s \n", p_param->dump_flag ? "Yes" : "No");
+	if (p_param->dump_flag == 1)
+	printf("Dump file                        : %s \n", p_param->dump_filename);
+	printf("---------------------------------------------------------------------------\n");
+
+	if (p_param->dump_flag == 1)
+	{
+		*f_dump = fopen(p_param->dump_filename, "w");
+		fprintf(*f_dump, "NALU type length nal_ref_idc idr Pid no_inter_layer_pred DTQ use_ref_base_pic discardable output\n");
+		fprintf(*f_dump, "------------------------------------------------------------------------------------------------\n");
+	}
+}
+
+void FinishDump(FILE** f_dump)
+{
+	if (p_param->dump_flag == 1)
+	{
+		fprintf(*f_dump, "------------------------------------------------------------------------------------------------\n");
+		fclose(*f_dump);
+
+		printf("\n");
+		printf("finished!\n");
+	}
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -33,7 +64,14 @@ int InitNalu(Nalu **nalu)
 		exit(1);
 	}
 
-	(*nalu)->index = 0;
+	(*nalu)->header = (NaluHeader*)calloc(1, sizeof(NaluHeader));
+	if (NULL == ((*nalu)->header))
+	{		
+		printf("Mem allocation error in %s, %s\n", __FILE__, __LINE__);
+		exit(1);
+	}
+
+	(*nalu)->index = -1;
 
 	return 1;
 }
@@ -43,6 +81,13 @@ int InitNalu(Nalu **nalu)
 //////////////////////////////////////////////////////////////////////////
 int FreeNalu(Nalu **nalu)
 {
+
+	if (NULL != ((*nalu)->header))
+	{
+		free((*nalu)->header);
+		(*nalu)->header = NULL;
+	}
+
 	if (NULL != ((*nalu)->buffer))
 	{
 		free((*nalu)->buffer);
@@ -64,6 +109,7 @@ int main (int argc, char **argv)
 {
 	FILE *pf_in      = NULL;
 	FILE *pf_out     = NULL;
+	FILE *pf_dump    = NULL;
 	Nalu *p_nalu     = NULL;
 	
 	InitNalu(&p_nalu);
@@ -71,14 +117,18 @@ int main (int argc, char **argv)
 	if (0 == ParseParam(&pf_in,&pf_out,argc, argv))
 		exit(1);
 
+	InitDump(&pf_dump);
+
 	while (p_param->nalu_num-- && !feof(pf_in))
 	{
 		GetOneNalu(pf_in,  p_nalu);
 
-		ParseNaluHeader(p_nalu);
+		ParseNaluHeader(p_nalu, pf_dump);
 
 		PutOneNalu(pf_out, p_nalu);
 	}
+
+	FinishDump(&pf_dump);
 
 	FreeNalu(&p_nalu);
 
@@ -98,11 +148,11 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 	// set default parameters
 	// printf("Setting Default Parameters...\n");
 	int i;
-	int err;
-	char *in_filename  = DEFAULT_IN_FILENAME;
-	char *out_filename = DEFAULT_IN_FILENAME;
-	p_param->nalu_num  = DEFAULT_NALU_NUM;
-	p_param->dump_flag = DEFAULT_DUMP_FLAG;
+	p_param->in_filename   = DEFAULT_IN_FILENAME;
+	p_param->out_filename  = DEFAULT_OUT_FILENAME;
+	p_param->dump_filename = DEFAULT_DUMP_FILENAME;
+	p_param->nalu_num      = DEFAULT_NALU_NUM;
+	p_param->dump_flag     = DEFAULT_DUMP_FLAG;
 	
 	// parse command line parameters
 	// printf("Parsing Command Line Parameters...\n");
@@ -116,16 +166,17 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 	{
 		if(0 == strncmp (argv[i], "-i", 2))
 		{
-			if((err=fopen_s(f_in,argv[i+1],"rb"))!=0)
+			if((*f_in = fopen(argv[i+1], "rb")) != 0)
 			{
 				printf( "Error: file %s not found\n",argv[i+1]);
 			}
+			p_param->in_filename = argv[i+1];
 			i++;
 		}
 
 		if(0 == strncmp (argv[i], "-o", 2))
 		{
-			out_filename=argv[i+1];
+			p_param->out_filename = argv[i+1];
 			i++;
 		}
 
@@ -141,7 +192,7 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 		}
 	}
 
-	if((err=fopen_s(f_out,out_filename,"wb"))!=0)
+	if((*f_out = fopen(p_param->out_filename, "wb"))!=0)
 		printf( "Error: file can not open\n");
 
 	if(i=argc)

@@ -8,70 +8,66 @@ extern Param *p_param;
 //////////////////////////////////////////////////////////////////////////
 // dump information of one NALU
 //////////////////////////////////////////////////////////////////////////
-int  DumpOneNalu(Nalu *p_nalu)
+int DumpOneNalu(Nalu *p_nalu, FILE *f_dump)
 {
-	printf("%4d: ",         p_nalu->index);
-	printf("type = %2d, ",  p_nalu->type);
-	printf("length= %5d.",   p_nalu->length);
-	//printf("\n");
+	NaluHeader *header = p_nalu->header;
+
+	printf("%d..", p_nalu->index);
+
+	fprintf(f_dump, "%4d ",    p_nalu->index);
+	fprintf(f_dump, "%4d ",    header->type);
+	fprintf(f_dump, "%6d ",    p_nalu->length);
+	fprintf(f_dump, "%11d ",   header->nal_ref_idc);
+
+	if (header->is_svc_header)
+	{
+		fprintf(f_dump, "%3d ",    header->idr_flag);
+		fprintf(f_dump, "%3d ",    header->priority_id);
+		fprintf(f_dump, "%19d ",   header->no_inter_layer_pred_flag);
+		fprintf(f_dump, "%d%d%d ", header->dependency_id, header->quality_id, header->temporal_id);
+		fprintf(f_dump, "%16d ",   header->use_ref_base_pic_flag);
+		fprintf(f_dump, "%11d ",   header->discardable_flag);
+		fprintf(f_dump, "%6d",     header->output_flag);
+	}
+
+	fprintf(f_dump,"\n");
 	return 0;
 }
 
-int  DumpOneSnalu(Snalu *p_snalu)
+//////////////////////////////////////////////////////////////////////////
+// read nalu header
+//////////////////////////////////////////////////////////////////////////
+int ParseNaluHeader(Nalu *p_nalu, FILE *f_dump)
 {
-	DumpOneNalu(*(p_snalu->pnalu));
-	printf("priority = %d, ",         p_snalu->priority_id);
-	printf("dep_id = %2d, ",  p_snalu->dependency_id);
-	printf("quality_id= %d, ",   p_snalu->quality_id);
-    printf("temporal_id= %d.",   p_snalu->temporal_id);
-	//printf("\n");
+	NaluHeader *header = p_nalu->header;
+
+	header->type               = (p_nalu->buffer[4]) & 31;
+	header->forbidden_zero_bit = ( (p_nalu->buffer[4]) & 128 ) >> 7;
+	header->nal_ref_idc        = ( (p_nalu->buffer[4]) & 96 ) >> 5;
+
+	if( header->type == PREFIX_NALU || header->type == SLICE_LAYER_EXT )
+		header->is_svc_header = 1;
+	else
+		header->is_svc_header = 0;
+
+	if (header->is_svc_header)
+	{
+		header->reserved_one_bit      = ( (p_nalu->buffer[5]) & 128 ) >> 7;
+		header->idr_flag              = ( (p_nalu->buffer[5]) & 64 ) >> 6;
+		header->priority_id           = (p_nalu->buffer[5]) & 63;
+		header->no_inter_layer_pred_flag = ( (p_nalu->buffer[6]) & 128 ) >> 7;
+		header->dependency_id         = ( (p_nalu->buffer[6]) & 112 ) >> 4;
+		header->quality_id            = (p_nalu->buffer[6]) & 15;
+		header->temporal_id           = ( (p_nalu->buffer[7]) & 224 ) >> 5;
+		header->use_ref_base_pic_flag = ( (p_nalu->buffer[7]) & 16 ) >> 4;
+		header->discardable_flag      = ( (p_nalu->buffer[7]) & 8 ) >> 3;		
+		header->output_flag           = ( (p_nalu->buffer[7]) & 4 ) >> 2;
+		header->reserved_three_2bits  = (p_nalu->buffer[7]) & 3;
+	}
+
+	if(p_param->dump_flag == 1)
+		DumpOneNalu(p_nalu, f_dump);
+
 	return 0;
-}
-
-int ParseNaluHeader(Nalu *p_nalu)
-{
-		p_nalu->type = (p_nalu->buffer[4]) & 31;
-		p_nalu->forbidden_zero_bit = ( (p_nalu->buffer[4]) & 128 ) >> 7;
-		p_nalu->nal_ref_idc = ( (p_nalu->buffer[4]) & 96 ) >> 5;
-
-		if( p_nalu->type == 14 || p_nalu->type == 20 )
-		{
-			Snalu *p_snalu;
-			p_snalu = (Snalu*)calloc(1, sizeof(Snalu));
-			if (NULL == p_snalu)
-			{		
-				printf("Mem allocation error in %s, %s\n", __FILE__, __LINE__);
-				exit(1);
-			}
-			p_snalu->pnalu = &p_nalu;
-			p_snalu->reserved_one_bit = ( (p_nalu->buffer[5]) & 128 ) >> 7;
-			p_snalu->idr_flag = ( (p_nalu->buffer[5]) & 64 ) >> 6;
-			p_snalu->priority_id = (p_nalu->buffer[5]) & 63;
-			p_snalu->no_inter_layer_pred_flag = ( (p_nalu->buffer[6]) & 128 ) >> 7;
-			p_snalu->dependency_id = ( (p_nalu->buffer[6]) & 112 ) >> 4;
-			p_snalu->quality_id = (p_nalu->buffer[6]) & 15;
-			p_snalu->temporal_id = ( (p_nalu->buffer[7]) & 224 ) >> 5;
-			p_snalu->use_ref_base_pic_flag = ( (p_nalu->buffer[7]) & 16 ) >> 4;
-			p_snalu->discardable_flag = ( (p_nalu->buffer[7]) & 8 ) >> 3;		
-			p_snalu->output_flag = ( (p_nalu->buffer[7]) & 4 ) >> 2;
-			p_snalu->reserved_three_2bits = (p_nalu->buffer[7]) & 3;
-
-			if(p_param->dump_flag == 1)
-				DumpOneSnalu(p_snalu);
-
-			if (NULL != p_snalu)
-			{
-				free(p_snalu);
-				p_snalu = NULL;
-			}
-		}
-
-
-		else if(p_param->dump_flag == 1)
-			DumpOneNalu(p_nalu);
-
-		printf("\n");
-
-		return 0;
 }
 
