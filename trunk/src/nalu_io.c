@@ -62,7 +62,7 @@ int GetOneNalu(FILE* pf_in, Nalu * p_nalu)
 int  PutOneNalu(FILE* pf_out, Nalu *p_nalu)
 {
 	fwrite(p_nalu->buffer, p_nalu->length, sizeof(byte), pf_out);
-	
+
 	fflush(pf_out);
 	
 	return 0;
