@@ -12,7 +12,7 @@ int DumpOneNalu(Nalu *p_nalu, FILE *f_dump)
 {
 	NaluHeader *header = p_nalu->header;
 
-	printf("%d..", p_nalu->index);
+	// printf("%d..", p_nalu->index);
 
 	fprintf(f_dump, "%4d ",    p_nalu->index);
 	fprintf(f_dump, "%4d ",    header->type);

@@ -52,7 +52,6 @@ int GetOneNalu(FILE* pf_in, Nalu * p_nalu)
 	}
 	fseek (pf_in, -4, SEEK_CUR);
 
-	p_nalu->length = i_pos - 4;
 	return i_pos - 4;
 }
 
@@ -61,9 +60,11 @@ int GetOneNalu(FILE* pf_in, Nalu * p_nalu)
 //////////////////////////////////////////////////////////////////////////
 int  PutOneNalu(FILE* pf_out, Nalu *p_nalu)
 {
-	fwrite(p_nalu->buffer, p_nalu->length, sizeof(byte), pf_out);
+	size_t len;
+	len = fwrite(p_nalu->buffer, sizeof(byte), p_nalu->length, pf_out);
 
 	fflush(pf_out);
-	
-	return 0;
+	// printf("write %d bytes\n", len);
+
+	return (int)len;
 }
