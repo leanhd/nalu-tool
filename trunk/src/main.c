@@ -111,6 +111,8 @@ int main (int argc, char **argv)
 	FILE *pf_out     = NULL;
 	FILE *pf_dump    = NULL;
 	Nalu *p_nalu     = NULL;
+
+	Bitstream bs, *p_bs = &bs;
 	
 	InitNalu(&p_nalu);
 
@@ -123,7 +125,9 @@ int main (int argc, char **argv)
 	{
 		p_nalu->length = GetOneNalu(pf_in,  p_nalu);
 
-		ParseNaluHeader(p_nalu, pf_dump);
+		InitBitstream(p_bs, p_nalu);
+
+		ParseNaluHeader(p_nalu, p_bs, pf_dump);
 
 		PutOneNalu(pf_out, p_nalu);
 	}
