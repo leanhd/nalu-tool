@@ -1,7 +1,7 @@
 #ifndef __NALU_TOOL_H__
 #define __NALU_TOOL_H__
 
-#define VERSION "090910"
+#define VERSION "090913"
 
 #define DEFAULT_NALU_NUM     1000    // large enough
 #define DEFAULT_DUMP_FLAG    0
@@ -36,6 +36,13 @@ typedef enum
 	SLICE_LAYER_EXT = 20
 } NaluType;
 
+typedef enum
+{
+	AVC_HEADER = 0,
+	SVC_HEADER,
+	MVC_HEADER
+} NaluSubSet;
+
 typedef struct global_parameter 
 {
 	char *in_filename;
@@ -47,7 +54,7 @@ typedef struct global_parameter
 
 typedef struct nal_unit_header
 {
-	int      is_svc_header;
+	NaluSubSet  subset;
 
 	// AVC header: 1 byte
 	int      forbidden_zero_bit;
@@ -55,7 +62,7 @@ typedef struct nal_unit_header
 	NaluType type;
 
 	// SVC extension header: 3 bytes
-	int     reserved_one_bit;
+	int     svc_extension_flag;          // 1 - SVC (Annex G.); 0 - MVC (Annex H.)
 	int     idr_flag;
 	int     priority_id;
 	int     no_inter_layer_pred_flag;
@@ -78,11 +85,24 @@ typedef struct nal_unit
 	NaluHeader *header;
 } Nalu;
 
+typedef struct bitstream
+{
+	byte *buffer;
+	int   len;
+
+	int   byte_offset;
+	int   bit_offset;
+	byte  curr_byte;
+} Bitstream;
+
 int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv);
 void InitDump(FILE** f_dump);
 void FinishDump(FILE** f_dump);
 int  GetOneNalu(FILE* pf_in, Nalu *p_nalu);
 int  PutOneNalu(FILE* pf_out, Nalu *p_nalu);
-int  ParseNaluHeader(Nalu *p_nalu, FILE *f_dump);
+int  ParseNaluHeader(Nalu *p_nalu, Bitstream *p_bs, FILE *f_dump);
+void InitBitstream(Bitstream *p_bs, Nalu *p_nalu);
+
+int  u_n(Bitstream *bs, int n);
 
 #endif // __NALU_TOOL_H__

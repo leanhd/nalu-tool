@@ -19,7 +19,7 @@ int DumpOneNalu(Nalu *p_nalu, FILE *f_dump)
 	fprintf(f_dump, "%6d ",    p_nalu->length);
 	fprintf(f_dump, "%11d ",   header->nal_ref_idc);
 
-	if (header->is_svc_header)
+	if (SVC_HEADER == header->subset)
 	{
 		fprintf(f_dump, "%3d ",    header->idr_flag);
 		fprintf(f_dump, "%3d ",    header->priority_id);
@@ -37,33 +37,40 @@ int DumpOneNalu(Nalu *p_nalu, FILE *f_dump)
 //////////////////////////////////////////////////////////////////////////
 // read nalu header
 //////////////////////////////////////////////////////////////////////////
-int ParseNaluHeader(Nalu *p_nalu, FILE *f_dump)
+int ParseNaluHeader(Nalu *p_nalu, Bitstream *p_bs, FILE *f_dump)
 {
 	NaluHeader *header = p_nalu->header;
 
-	header->type               = (p_nalu->buffer[4]) & 31;
-	header->forbidden_zero_bit = ( (p_nalu->buffer[4]) & 128 ) >> 7;
-	header->nal_ref_idc        = ( (p_nalu->buffer[4]) & 96 ) >> 5;
+	header->forbidden_zero_bit = u_n(p_bs, 1);
+	header->nal_ref_idc        = u_n(p_bs, 2);
+	header->type               = u_n(p_bs, 5);
 
 	if( header->type == PREFIX_NALU || header->type == SLICE_LAYER_EXT )
-		header->is_svc_header = 1;
-	else
-		header->is_svc_header = 0;
-
-	if (header->is_svc_header)
 	{
-		header->reserved_one_bit      = ( (p_nalu->buffer[5]) & 128 ) >> 7;
-		header->idr_flag              = ( (p_nalu->buffer[5]) & 64 ) >> 6;
-		header->priority_id           = (p_nalu->buffer[5]) & 63;
-		header->no_inter_layer_pred_flag = ( (p_nalu->buffer[6]) & 128 ) >> 7;
-		header->dependency_id         = ( (p_nalu->buffer[6]) & 112 ) >> 4;
-		header->quality_id            = (p_nalu->buffer[6]) & 15;
-		header->temporal_id           = ( (p_nalu->buffer[7]) & 224 ) >> 5;
-		header->use_ref_base_pic_flag = ( (p_nalu->buffer[7]) & 16 ) >> 4;
-		header->discardable_flag      = ( (p_nalu->buffer[7]) & 8 ) >> 3;		
-		header->output_flag           = ( (p_nalu->buffer[7]) & 4 ) >> 2;
-		header->reserved_three_2bits  = (p_nalu->buffer[7]) & 3;
+		header->svc_extension_flag    = u_n(p_bs, 1);
+		header->subset = header->svc_extension_flag ? SVC_HEADER : MVC_HEADER;
 	}
+	else
+		header->subset = AVC_HEADER;
+
+	if (SVC_HEADER == header->subset)
+	{
+		header->idr_flag              = u_n(p_bs, 1);
+		header->priority_id           = u_n(p_bs, 6);
+		header->no_inter_layer_pred_flag = u_n(p_bs, 1);
+		header->dependency_id         = u_n(p_bs, 3);
+		header->quality_id            = u_n(p_bs, 4);
+		header->temporal_id           = u_n(p_bs, 3);
+		header->use_ref_base_pic_flag = u_n(p_bs, 1);
+		header->discardable_flag      = u_n(p_bs, 1);		
+		header->output_flag           = u_n(p_bs, 1);
+		header->reserved_three_2bits  = u_n(p_bs, 2);
+	}
+
+// 	if (MVC_HEADER == header->subset)
+// 	{
+// 		;
+// 	}
 
 	if(p_param->dump_flag == 1)
 		DumpOneNalu(p_nalu, f_dump);

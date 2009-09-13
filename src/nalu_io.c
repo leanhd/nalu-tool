@@ -68,3 +68,42 @@ int  PutOneNalu(FILE* pf_out, Nalu *p_nalu)
 
 	return (int)len;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// Init bitstream for current nalu
+//////////////////////////////////////////////////////////////////////////
+void InitBitstream(Bitstream *p_bs, Nalu *p_nalu)
+{
+	p_bs->buffer      = p_nalu->buffer + 4;
+	p_bs->len         = p_nalu->length - 4;
+	p_bs->byte_offset = 0;
+	p_bs->bit_offset  = 0;
+	p_bs->curr_byte   = p_bs->buffer[p_bs->byte_offset];
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Read n bits from the bitstream
+//////////////////////////////////////////////////////////////////////////
+int u_n(Bitstream *bs, int n)
+{
+	int ret = 0;
+	int mask;
+	int i;
+
+	for (i = 0; i < n; i++)
+	{
+		mask = 0x01 << (7 - bs->bit_offset);
+		ret <<= 1;
+		ret += (bs->curr_byte & mask) >> (7 - bs->bit_offset);
+		bs->bit_offset ++;
+
+		if (bs->bit_offset == 8)
+		{
+			bs->byte_offset ++;
+			bs->bit_offset = 0;
+			bs->curr_byte  = bs->buffer[bs->byte_offset];
+		}
+	}
+
+	return ret;
+}
