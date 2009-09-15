@@ -73,6 +73,8 @@ int InitNalu(Nalu **nalu)
 
 	(*nalu)->index = -1;
 
+	(*nalu)->start_code_len = 0;
+
 	return 1;
 }
 

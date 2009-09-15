@@ -48,11 +48,17 @@ int GetOneNalu(FILE* pf_in, Nalu * p_nalu)
 		i_info3 = FindStartCode(&p_nalu->buffer[i_pos-4], 3);
 		if(i_info3 != 1)
 			i_info2 = FindStartCode(&p_nalu->buffer[i_pos-3], 2);
-		i_start_code_found = (i_info2 == 1 || i_info3 == 1);
-	}
-	fseek (pf_in, -4, SEEK_CUR);
 
-	return i_pos - 4;
+		if(i_info3 == 1){
+			p_nalu->start_code_len = 4;
+			i_start_code_found = 1;}
+		else if(i_info2 == 1){
+			p_nalu->start_code_len = 3;
+			i_start_code_found = 1;}
+	}
+	fseek (pf_in, 0-(p_nalu->start_code_len), SEEK_CUR);
+
+	return i_pos - p_nalu->start_code_len;
 }
 
 //////////////////////////////////////////////////////////////////////////
