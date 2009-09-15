@@ -19,7 +19,7 @@ typedef enum
 	UNSPECIFIED     = 0,
 	NON_IDR_SLICE   = 1,
 	SLICE_PARTA     = 2,
-	SLICE_PARTB     = 2,
+	SLICE_PARTB     = 3,
 	SLICE_PARTC     = 4,
 	IDR_SLICE       = 5,
 	SEI             = 6,
@@ -78,6 +78,7 @@ typedef struct nal_unit_header
 typedef struct nal_unit
 {
 	int      index;
+    int      start_code_len;
 
 	int      length;
 	byte    *buffer;
