@@ -48,8 +48,11 @@ typedef struct global_parameter
 	char *in_filename;
 	char *out_filename;
 	char *dump_filename;
-	int nalu_num;       // how many nalus will be parsed
-	int dump_flag;      // if nalu information will be dumped
+	int  nalu_num;       // how many nalus will be parsed
+	int  dump_flag;      // if nalu information will be dumped
+	int  temp_id;
+	int  qual_id;
+	int  dep_id;
 } Param;
 
 typedef struct nal_unit_header

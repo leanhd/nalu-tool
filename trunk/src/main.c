@@ -115,6 +115,7 @@ int main (int argc, char **argv)
 	Nalu *p_nalu     = NULL;
 
 	Bitstream bs, *p_bs = &bs;
+	int out_flag = 1;
 	
 	InitNalu(&p_nalu);
 
@@ -129,9 +130,12 @@ int main (int argc, char **argv)
 
 		InitBitstream(p_bs, p_nalu);
 
-		ParseNaluHeader(p_nalu, p_bs, pf_dump);
+		out_flag = ParseNaluHeader(p_nalu, p_bs, pf_dump);
 
-		PutOneNalu(pf_out, p_nalu);
+		if(out_flag)
+		{
+			PutOneNalu(pf_out, p_nalu);
+		}
 	}
 
 	FinishDump(&pf_dump);
@@ -162,7 +166,7 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 	
 	// parse command line parameters
 	// printf("Parsing Command Line Parameters...\n");
-	if (argc < 3 || argc > 8)
+	if (argc < 3 || argc > 14)
 	{
 		PrintHelp();
 		return 0;
@@ -195,6 +199,21 @@ int  ParseParam(FILE** f_in,FILE** f_out,int argc, char **argv)
 		if(0 == strncmp (argv[i], "-v", 2))
 		{
 			p_param->dump_flag = 1;
+		}
+
+		if(0 == strncmp (argv[i], "-t", 2))
+		{
+			p_param->temp_id = atoi(argv[i+1]);
+		}
+
+		if(0 == strncmp (argv[i], "-q", 2))
+		{
+			p_param->qual_id = atoi(argv[i+1]);
+		}
+
+		if(0 == strncmp (argv[i], "-d", 2))
+		{
+			p_param->dep_id = atoi(argv[i+1]);
 		}
 	}
 
