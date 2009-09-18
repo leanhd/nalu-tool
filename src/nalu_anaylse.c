@@ -39,6 +39,7 @@ int DumpOneNalu(Nalu *p_nalu, FILE *f_dump)
 //////////////////////////////////////////////////////////////////////////
 int ParseNaluHeader(Nalu *p_nalu, Bitstream *p_bs, FILE *f_dump)
 {
+	int ret_flag = 1;
 	NaluHeader *header = p_nalu->header;
 
 	header->forbidden_zero_bit = u_n(p_bs, 1);
@@ -65,6 +66,11 @@ int ParseNaluHeader(Nalu *p_nalu, Bitstream *p_bs, FILE *f_dump)
 		header->discardable_flag      = u_n(p_bs, 1);		
 		header->output_flag           = u_n(p_bs, 1);
 		header->reserved_three_2bits  = u_n(p_bs, 2);
+
+		if((p_param->temp_id < header->temporal_id)
+			|| (p_param->dep_id < header->dependency_id)
+			|| (p_param->qual_id < header->quality_id))
+			ret_flag = 0;
 	}
 
 // 	if (MVC_HEADER == header->subset)
@@ -75,6 +81,6 @@ int ParseNaluHeader(Nalu *p_nalu, Bitstream *p_bs, FILE *f_dump)
 	if(p_param->dump_flag == 1)
 		DumpOneNalu(p_nalu, f_dump);
 
-	return 0;
+	return ret_flag;
 }
 
