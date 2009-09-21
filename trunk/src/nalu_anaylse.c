@@ -69,9 +69,11 @@ int ParseNaluHeader(Nalu *p_nalu, Bitstream *p_bs, FILE *f_dump)
 
 		if((p_param->temp_id < header->temporal_id)
 			|| (p_param->dep_id < header->dependency_id)
-			|| (p_param->qual_id < header->quality_id)
-			|| (header->type == PREFIX_NALU))
+			|| (p_param->qual_id < header->quality_id))
 			ret_flag = 0;
+		if(p_param->dep_id == 0)
+			if(header->type == PREFIX_NALU)
+				ret_flag = 0;
 	}
 
 // 	if (MVC_HEADER == header->subset)
